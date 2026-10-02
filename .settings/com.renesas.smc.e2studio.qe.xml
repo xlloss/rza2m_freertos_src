@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<QE>
+    <Segment id="Project">
+        <Setting id="SrcGeneratedPath" value="src/smc_gen"/>
+    </Segment>
+    <Segment id="Pin">
+        <Setting id="PC_1" value="PC_1"/>
+        <Setting id="P6_0" value="P6_0"/>
+        <Setting id="PD_7" value="RIIC3SDA"/>
+        <Setting id="PD_6" value="RIIC3SCL"/>
+        <Setting id="P9_1" value="RxD4"/>
+        <Setting id="P9_0" value="TxD4"/>
+    </Segment>
+    <Segment id="Device">
+        <Setting id="Series" value="RZA"/>
+        <Setting id="Group" value="RZA2M"/>
+        <Setting id="Board" value="Custom User Board"/>
+        <Setting id="PartNo" value="R7S921053"/>
+        <Setting id="PinCount" value="324"/>
+    </Segment>
+    <Segment id="Component">
+        <Setting id="stb" value="FIT"/>
+        <Setting id="scifa4" value="FIT"/>
+        <Setting id="cache" value="FIT"/>
+        <Setting id="intc" value="FIT"/>
+        <Setting id="cbuffer0" value="FIT"/>
+        <Setting id="ostm_reserved" value="FIT"/>
+        <Setting id="os_abstraction_freertos" value="FIT"/>
+        <Setting id="iodefine" value="FIT"/>
+        <Setting id="mmu" value="FIT"/>
+        <Setting id="riic3" value="FIT"/>
+        <Setting id="runtime_stats_timer" value="FIT"/>
+        <Setting id="cpg" value="FIT"/>
+        <Setting id="gpio" value="FIT"/>
+        <Segment component="r_stb1.04" id="stb" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_scifa2.05" id="scifa4" source="com.renesas.smc.tools.swcomponent.fit.source">
+            <Setting id="SCIFA_TX_DMA_MODULE" value="NULL"/>
+            <Setting id="SCIFA_STOP" value="SCIFA_STOPBITS_1"/>
+            <Setting id="SCIFA_TRANSFER_CLOCK" value="SCIFA_CLK_SRC_INT_SCK_IN"/>
+            <Setting id="SCIFA_DATA_BIT_LENGTH" value="SCIFA_DATA_8BIT"/>
+            <Setting id="SCIFA_CFG_BITRATE_BPS" value="115200"/>
+            <Setting id="SCIFA_FIFO_DATA_SETTING" value="SCIFA_LOOPBACK_DISABLE"/>
+            <Setting id="SCIFA_CTS_PORT_DATA_SELECT" value="SCIFA_SPTR_INIT_HIGH"/>
+            <Setting id="SCIFA_SCK_PORT_DATA_SELECT" value="SCIFA_SPTR_INIT_HIGH"/>
+            <Setting id="SCIFA_WRITE_BLOCKING_MODE_SELECT" value="SCIFA_WRITE_BLOCKING_MODE_ENABLE"/>
+            <Setting id="SCIFA_NOISE_FILTER" value="SCIFA_NOISE_CANCEL_DISABLE"/>
+            <Setting id="SCIFA_ERI_BRI_INTERRUPT_PRORITY" value="0"/>
+            <Setting id="SCIFA_TXI_DRIVER_BUFFER" value="1024"/>
+            <Setting id="SCIFA_RX_INTERRUPT_PRORITY" value="30"/>
+            <Setting id="SCIFA_READ_BLOCKING_MODE_SELECT" value="SCIFA_READ_BLOCKING_MODE_ENABLE"/>
+            <Setting id="SCIFA_PARITY_ENABLE" value="SCIFA_PARITY_OFF"/>
+            <Setting id="SCIFA_TX_FIFO_DATA_TRIGGER" value="15"/>
+            <Setting id="SCIFA_TXI_INTERRUPT_PRORITY" value="30"/>
+            <Setting id="SCIFA_TX_DMA_CALLBACK_FUNCTION" value="NULL"/>
+            <Setting id="SCIFA_SERIAL_PORT_BREAK_DATA" value="SCIFA_SPTR_INIT_HIGH"/>
+            <Setting id="SCIFA_RX_DMA_CALLBACK_FUNCTION" value="NULL"/>
+            <Setting id="SCIFA_TX_DATA_MODE" value="SCIFA_TX_INTERRUPT_MODE"/>
+            <Setting id="SCIFA_RX_FIFO_DATA_TRIGGER" value="1"/>
+            <Setting id="SCIFA_TEI_DRI_INTERRUPT_PRORITY" value="0"/>
+            <Setting id="SCIFA_OPERATION_MODE" value="SCIFA_MODE_ASYNC"/>
+            <Setting id="SCIFA_TRANSFER_DIRECTION" value="SCIFA_LSB_FIRST"/>
+            <Setting id="SCIFA_PARITY_TYPE" value="SCIFA_EVEN_PARITY"/>
+            <Setting id="SCIFA_MODULATION_DUTY_CORRECTON" value="SCIFA_MODEM_CONTROL_DISABLE"/>
+            <Setting id="SCIFA_RX_DATA_MODE" value="SCIFA_RX_INTERRUPT_MODE"/>
+            <Setting id="SCIFA_BASE_CLOCK_SELECT" value="SCIFA_CLK_16X"/>
+            <Setting id="SCIFA_RTS_TRIGGER_NUMBER" value="SCIFA_RTS_ACTIVE_TRIGGER_15"/>
+            <Setting id="SCIFA_RTS_PORT_DATA_SELECT" value="SCIFA_SPTR_INIT_HIGH"/>
+            <Setting id="SCIFA_RX_DMA_MODULE" value="NULL"/>
+            <Setting id="SCIFA_RXI_DRIVER_BUFFER" value="1024"/>
+        </Segment>
+        <Segment component="r_cache1.03" id="cache" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_intc1.05" id="intc" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_cbuffer1.03" id="cbuffer0" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_ostm1.07" id="ostm_reserved" source="com.renesas.smc.tools.swcomponent.fit.source">
+            <Setting id="OSTM_COUNTER_FORMAT" value="OSTM_TIME_MS"/>
+            <Setting id="OSTM_INTC_PRIORITY" value="30"/>
+            <Setting id="OSTM_MODE" value="OSTM_MODE_INTERVAL"/>
+            <Setting id="OSTM_INTC_SETTING" value="INTC_ENABLE"/>
+            <Setting id="OSTM_TIME" value="1"/>
+            <Setting id="OSTM_START_GENERATE_INTERRUPT" value="OSTM_START_INTERRUPT_OFF"/>
+            <Setting id="OSTM_INTC_FUNCTION" value="FreeRTOS_Tick_Handler"/>
+        </Segment>
+        <Segment component="r_os_abstraction_freertos3.11" id="os_abstraction_freertos" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_iodefine3.01" id="iodefine" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_mmu1.04" id="mmu" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_riic1.07" id="riic3" source="com.renesas.smc.tools.swcomponent.fit.source">
+            <Setting id="RIIC_START_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_SLAVE_ADDRESS2_ENABLE" value="false"/>
+            <Setting id="RIIC_SLAVE_ADDRESS1_ENABLE" value="false"/>
+            <Setting id="RIIC_RDRF_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_FILTER_STAGE" value="RIIC_FILTER_NOT_USED"/>
+            <Setting id="RIIC_SCL_FALL_TIME" value="0"/>
+            <Setting id="RIIC_HOST_ADDRESS_DETECTION" value="false"/>
+            <Setting id="RIIC_AL_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_TIMEOUT" value="RIIC_TIMEOUT_NOT_USED"/>
+            <Setting id="RIIC_SCL_RISE_TIME" value="0"/>
+            <Setting id="RIIC_OPERATION_MODE" value="RIIC_MODE_MASTER"/>
+            <Setting id="RIIC_FREQUENCY" value="RIIC_FREQUENCY_400KHZ"/>
+            <Setting id="RIIC_SLAVE_ADDRESS0_ENABLE" value="true"/>
+            <Setting id="RIIC_BUS_FORMAT" value="RIIC_FORMAT_I2C"/>
+            <Setting id="RIIC_TDRE_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_TMOF_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_TEND_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_SLAVE_ADDRESS0_LENGTH" value="RIIC_DEVICE_ADDR_7"/>
+            <Setting id="RIIC_SLAVE_ADDRESS2" value="1"/>
+            <Setting id="RIIC_DUTY" value="RIIC_DUTY_50"/>
+            <Setting id="RIIC_SLAVE_ADDRESS0" value="1"/>
+            <Setting id="RIIC_SLAVE_ADDRESS2_LENGTH" value="RIIC_DEVICE_ADDR_7"/>
+            <Setting id="RIIC_SLAVE_ADDRESS1" value="1"/>
+            <Setting id="RIIC_SLAVE_ADDRESS1_LENGTH" value="RIIC_DEVICE_ADDR_7"/>
+            <Setting id="RIIC_STOP_INTERRUPT_PRIORITY" value="9"/>
+            <Setting id="RIIC_NACKF_INTERRUPT_PRIORITY" value="9"/>
+        </Segment>
+        <Segment component="r_ostm1.07" id="runtime_stats_timer" source="com.renesas.smc.tools.swcomponent.fit.source">
+            <Setting id="OSTM_COUNTER_FORMAT" value="OSTM_TIME_COUNT"/>
+            <Setting id="OSTM_INTC_PRIORITY" value="0"/>
+            <Setting id="OSTM_MODE" value="OSTM_MODE_FREERUN"/>
+            <Setting id="OSTM_INTC_SETTING" value="INTC_DISABLE"/>
+            <Setting id="OSTM_TIME" value="0"/>
+            <Setting id="OSTM_START_GENERATE_INTERRUPT" value="OSTM_START_INTERRUPT_OFF"/>
+            <Setting id="OSTM_INTC_FUNCTION" value="NULL"/>
+        </Segment>
+        <Segment component="r_cpg1.05" id="cpg" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_gpio1.06" id="gpio" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+    </Segment>
+</QE>
