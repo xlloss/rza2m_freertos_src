@@ -54,7 +54,9 @@
 #include "r_task_priority.h"
 #include "command.h"
 #include "r_eeprom_sample.h"
-
+#include "aht10.h"
+#include "r_riic_drv_api.h"
+#include "r_rza2m_riic_lld_api.h"
 #include "iodefine.h"
 
 /******************************************************************************
@@ -83,20 +85,20 @@ Private global variables and functions
 static uint32_t gs_main_led_flg;      /* LED lighting/turning off */
 static int_t gs_my_gpio_handle;
 
-/* Casting the pointer to a r_gpio_port_pin_t 
+/* Casting the pointer to a r_gpio_port_pin_t
  * type for setting of GPIO register address */
-static st_r_drv_gpio_pin_rw_t gs_p60_hi = { GPIO_PORT_6_PIN_0, 
-                                            GPIO_LEVEL_HIGH, 
+static st_r_drv_gpio_pin_rw_t gs_p60_hi = { GPIO_PORT_6_PIN_0,
+                                            GPIO_LEVEL_HIGH,
                                             GPIO_SUCCESS };
 
-/* Casting the pointer to a r_gpio_port_pin_t 
+/* Casting the pointer to a r_gpio_port_pin_t
  * type for setting of GPIO register address */
-static st_r_drv_gpio_pin_rw_t gs_p60_lo = { GPIO_PORT_6_PIN_0, 
-                                            GPIO_LEVEL_LOW,  
+static st_r_drv_gpio_pin_rw_t gs_p60_lo = { GPIO_PORT_6_PIN_0,
+                                            GPIO_LEVEL_LOW,
                                             GPIO_SUCCESS };
 static const r_gpio_port_pin_t gs_led_pin_list[] =
 {
-    /* Casting the pointer to a r_gpio_port_pin_t 
+    /* Casting the pointer to a r_gpio_port_pin_t
      * type for setting of GPIO register address */
     GPIO_PORT_6_PIN_0,
 };
@@ -136,6 +138,73 @@ int_t os_console_task_t(void)
 /******************************************************************************
  End of function os_console_task_t
  *****************************************************************************/
+
+void aht10_demo_task(void *p_param)
+{
+    int_t riic_handle = -1;
+    st_riic_config_t riic_cfg;
+    aht10_data_t sensor_data;
+
+    /* 1. Open RIIC driver (e.g., Channel 3) */
+    riic_handle = open("\\\\.\\riic3", O_RDWR);
+    if (riic_handle < 0)
+    {
+        printf("[ERROR] Failed to open RIIC driver!\r\n");
+        while (1) { R_OS_TaskSleep(1000); }
+    }
+
+    /* 2. Configure I2C Master parameters */
+    memset(&riic_cfg, 0, sizeof(st_riic_config_t));
+    riic_cfg.riic_mode                 = RIIC_MODE_MASTER;
+    riic_cfg.frequency                 = RIIC_FREQUENCY_100KHZ;
+    riic_cfg.duty                      = RIIC_DUTY_50;
+    riic_cfg.format                    = RIIC_FORMAT_I2C;
+    riic_cfg.noise_filter_stage        = RIIC_FILTER_NOT_USED;
+    riic_cfg.timeout                   = RIIC_TIMEOUT_NOT_USED;
+    riic_cfg.slave_address_enable[0]   = false;
+
+    if (DRV_SUCCESS != control(riic_handle, CTL_RIIC_SET_CONFIG, &riic_cfg))
+    {
+        printf("[ERROR] Failed to set RIIC configuration!\r\n");
+        close(riic_handle);
+        return;
+    }
+
+    /* 3. Initialize sensor */
+    if (aht10_init(riic_handle) < 0)
+    {
+        printf("[WARN] AHT10 init failed, trying soft reset...\r\n");
+        aht10_soft_reset(riic_handle);
+        if (aht10_init(riic_handle) < 0)
+        {
+            printf("[ERROR] Failed to connect to AHT10, please check wiring and pull-up resistors!\r\n");
+            close(riic_handle);
+            return;
+        }
+    }
+
+    printf("AHT10 sensor initialized successfully, starting sampling...\r\n");
+
+    /* 4. Sampling loop (every 2 seconds) */
+    while (1)
+    {
+        int ret = aht10_read_data(riic_handle, &sensor_data);
+        if (ret == 0)
+        {
+            printf("[AHT10] Temp: %.2f °C | Hum: %.2f %%RH\r\n",
+                   sensor_data.temperature,
+                   sensor_data.humidity);
+        }
+        else
+        {
+            printf("[ERROR] Failed to read AHT10 data! Error code: %d\r\n", ret);
+        }
+
+        R_OS_TaskSleep(2000);
+    }
+
+    close(riic_handle);
+}
 
 /******************************************************************************
 * Function Name: os_main_task_t
@@ -182,8 +251,8 @@ int_t os_main_task_t(void)
      **************************************************/
     pin_led.p_pin_list = gs_led_pin_list;
     pin_led.count = (sizeof(gs_led_pin_list)) / (sizeof(gs_led_pin_list[0]));
-    err = direct_control(gs_my_gpio_handle, 
-                            CTL_GPIO_INIT_BY_PIN_LIST, 
+    err = direct_control(gs_my_gpio_handle,
+                            CTL_GPIO_INIT_BY_PIN_LIST,
                             &pin_led);
 
     /* On error */
@@ -201,7 +270,7 @@ int_t os_main_task_t(void)
     show_welcome_msg(stdout, true);
 
     err = init_eeprom();
-    
+
     /* On error */
     if ( err < 0 )
     {
@@ -214,7 +283,12 @@ int_t os_main_task_t(void)
 
     /* Create a task to run the console */
     R_OS_TaskCreate("Console", os_console_task_t, NULL,
-                                R_OS_ABSTRACTION_DEFAULT_STACK_SIZE, 
+                                R_OS_ABSTRACTION_DEFAULT_STACK_SIZE,
+                                TASK_CONSOLE_TASK_PRI);
+
+    /* Create AHT10 Demo Task */
+    R_OS_TaskCreate("AHT10", aht10_demo_task, NULL,
+                                R_OS_ABSTRACTION_DEFAULT_STACK_SIZE,
                                 TASK_CONSOLE_TASK_PRI);
 
     while(1)
@@ -233,7 +307,7 @@ int_t os_main_task_t(void)
 
         R_OS_TaskSleep(500);
     }
-    
+
     return err;
 }
 /*****************************************************************************
@@ -281,7 +355,7 @@ int_t main(void)
 
 /******************************************************************************
 * Function Name: init_eeprom
-* Description  : Initialize EEPROM 
+* Description  : Initialize EEPROM
 *              : opens and configures RIIC driver
 * Arguments    : none
 * Return Value : NO_ERROR - EEPROM initialization is succeeded.
