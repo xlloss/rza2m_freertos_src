@@ -69,7 +69,7 @@
             <Setting id="SCIFA_RXI_DRIVER_BUFFER" value="1024"/>
         </Segment>
         <Segment component="r_cache1.03" id="cache" source="com.renesas.smc.tools.swcomponent.fit.source"/>
-        <Segment component="r_intc1.05" id="intc" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_intc1.06" id="intc" source="com.renesas.smc.tools.swcomponent.fit.source"/>
         <Segment component="r_cbuffer1.03" id="cbuffer0" source="com.renesas.smc.tools.swcomponent.fit.source"/>
         <Segment component="r_ostm1.07" id="ostm_reserved" source="com.renesas.smc.tools.swcomponent.fit.source">
             <Setting id="OSTM_COUNTER_FORMAT" value="OSTM_TIME_MS"/>
@@ -80,7 +80,7 @@
             <Setting id="OSTM_START_GENERATE_INTERRUPT" value="OSTM_START_INTERRUPT_OFF"/>
             <Setting id="OSTM_INTC_FUNCTION" value="FreeRTOS_Tick_Handler"/>
         </Segment>
-        <Segment component="r_os_abstraction_freertos3.11" id="os_abstraction_freertos" source="com.renesas.smc.tools.swcomponent.fit.source"/>
+        <Segment component="r_os_abstraction_freertos3.12" id="os_abstraction_freertos" source="com.renesas.smc.tools.swcomponent.fit.source"/>
         <Segment component="r_iodefine3.01" id="iodefine" source="com.renesas.smc.tools.swcomponent.fit.source"/>
         <Segment component="r_mmu1.04" id="mmu" source="com.renesas.smc.tools.swcomponent.fit.source"/>
         <Segment component="r_riic1.07" id="riic3" source="com.renesas.smc.tools.swcomponent.fit.source">

@@ -22,7 +22,7 @@
 * Version      : 1.0.0
 * Device(s)    : R7S921053
 * Description  : Pin Configuration.
-* Creation Date: 2024-10-31
+* Creation Date: 2026-10-03
 ***********************************************************************************************************************/
 
 #ifndef DRIVERS_R_GPIO_INC_R_GPIO_DRV_SC_CFG_H_

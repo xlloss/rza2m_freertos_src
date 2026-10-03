@@ -28,7 +28,7 @@
 MEMORY {
     ROM               (rx)  : ORIGIN = 0x20010000, LENGTH = 0x04000000
     MMU_PAGE_TABLE    (rw)  : ORIGIN = 0x80020000, LENGTH = 0x00004000
-    HARDWARE_INIT_RAM (rwx) : ORIGIN = 0x80024000, LENGTH = 0x00004000
+    HARDWARE_INIT_RAM (rwx) : ORIGIN = 0x80024000, LENGTH = 0x00003E00
     STACK             (rw)  : ORIGIN = 0x80028000, LENGTH = 0x00010000
     CACHED_RAM        (rwx) : ORIGIN = 0x80038000, LENGTH = 0x002C8000
     UNCACHED_RAM      (rwx) : ORIGIN = 0x82300000, LENGTH = 0x00100000
@@ -66,7 +66,7 @@ SECTIONS
 
     LOAD_MODULE2 : ALIGN( 0x200 ) {
         /* This section used by "hardware setup" and must to be assigned to the Internal RAM. */
-        "*/r_cpg/*.o"       (.text .text.* .rodata .rodata.* .data .data.*)
+        "*/r_cpg/*.o"      (.text .text.* .rodata .rodata.* .data .data.*)
         "*/rza_io_regrw.o" (.text .text.* .rodata .rodata.* .data .data.*)
         "*/hwsetup*.o"     (.text .text.* .rodata .rodata.* .data .data.*)
         . = ALIGN( 0x4 );

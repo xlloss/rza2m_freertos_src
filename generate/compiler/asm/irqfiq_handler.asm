@@ -48,7 +48,7 @@
     .extern  NMI_Handler_Interrupt
     .extern  INTC_Handler_Interrupt
 
-    .global  irq_handler
+    .global  IRQ_Handler
     .global  fiq_handler
 
 
@@ -85,7 +85,7 @@ fiq_handler:
 @               : the stack pointer and the general registers from the stack and
 @               : returns from the IRQ interrupt processing.
 @******************************************************************************
-irq_handler:
+IRQ_Handler:
     SUB     lr, lr, #4
     SRSDB   sp!, #SYS_MODE              @;; Store LR_irq and SPSR_irq in system mode stack
     CPS     #SYS_MODE                   @;; Switch to system mode

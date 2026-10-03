@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>rza2m_eeprom_riic_sample_freertos_gcc</name>
+	<name>rza2m_freertos_src</name>
 	<comment></comment>
 	<projects>
 	</projects>

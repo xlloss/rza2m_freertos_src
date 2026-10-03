@@ -61,7 +61,7 @@ static st_mount_table_t gs_mount_table[] =
         { "runtime_stats_timer", (st_r_driver_t *)&g_ostm_driver, R_SC1 },
         /* End of modification */
 
-/* Modified by user, drivers that are not under the control of sc added here */
+ /* Modified by user, drivers that are not under the control of sc added here */
         /** SCIFA Channel 4 Driver added by USER */
 		/* R_SCIx should map to scifa4 */
         {"stdin",  (st_r_driver_t *)&g_scifa_driver, R_SC0},
@@ -72,7 +72,6 @@ static st_mount_table_t gs_mount_table[] =
         /** SCIFA Channel 4 Driver added by USER */
         {"stderr", (st_r_driver_t *)&g_scifa_driver, R_SC0},
  /* End of user modification */
-
 
 };
 
