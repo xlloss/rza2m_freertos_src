@@ -55,6 +55,7 @@
 #include "command.h"
 #include "r_eeprom_sample.h"
 #include "aht10.h"
+#include "ssd1306.h"
 #include "r_riic_drv_api.h"
 #include "r_rza2m_riic_lld_api.h"
 #include "iodefine.h"
@@ -139,58 +140,115 @@ int_t os_console_task_t(void)
  End of function os_console_task_t
  *****************************************************************************/
 
-void aht10_demo_task(void *p_param)
-{
-    int_t riic_handle = -1;
-    st_riic_config_t riic_cfg;
-    aht10_data_t sensor_data;
+/* ==============================================================================
+ * Shared RIIC3 Bus Management (AHT10 & SSD1306 on same I2C channel)
+ * ============================================================================== */
+static int_t gs_riic3_handle = -1;
+static p_mutex_t gs_riic3_mutex = NULL;
 
-    /* 1. Open RIIC driver (e.g., Channel 3) */
-    riic_handle = open("\\\\.\\riic3", O_RDWR);
-    if (riic_handle < 0)
+static int_t riic3_bus_init(void)
+{
+    st_riic_config_t riic_cfg;
+
+    if (gs_riic3_handle >= 0)
     {
-        printf("[ERROR] Failed to open RIIC driver!\r\n");
-        while (1) { R_OS_TaskSleep(1000); }
+        return gs_riic3_handle;
     }
 
-    /* 2. Configure I2C Master parameters */
+    /* 1. Open RIIC3 hardware channel once */
+    gs_riic3_handle = open(DEVICE_INDENTIFIER "riic3", O_RDWR);
+    if (gs_riic3_handle < 0)
+    {
+        printf("[ERROR] Failed to open RIIC3 driver!\r\n");
+        return -1;
+    }
+
+    /* 2. Configure I2C Master parameters (400kHz Fast-mode supported by both SSD1306 and AHT10) */
     memset(&riic_cfg, 0, sizeof(st_riic_config_t));
     riic_cfg.riic_mode                 = RIIC_MODE_MASTER;
-    riic_cfg.frequency                 = RIIC_FREQUENCY_100KHZ;
+    riic_cfg.frequency                 = RIIC_FREQUENCY_400KHZ;
     riic_cfg.duty                      = RIIC_DUTY_50;
     riic_cfg.format                    = RIIC_FORMAT_I2C;
     riic_cfg.noise_filter_stage        = RIIC_FILTER_NOT_USED;
     riic_cfg.timeout                   = RIIC_TIMEOUT_NOT_USED;
     riic_cfg.slave_address_enable[0]   = false;
 
-    if (DRV_SUCCESS != control(riic_handle, CTL_RIIC_SET_CONFIG, &riic_cfg))
+    if (DRV_SUCCESS != control(gs_riic3_handle, CTL_RIIC_SET_CONFIG, &riic_cfg))
     {
-        printf("[ERROR] Failed to set RIIC configuration!\r\n");
-        close(riic_handle);
-        return;
+        printf("[ERROR] Failed to set RIIC3 configuration!\r\n");
+        close(gs_riic3_handle);
+        gs_riic3_handle = -1;
+        return -1;
     }
 
-    /* 3. Initialize sensor */
-    if (aht10_init(riic_handle) < 0)
+    /* 3. Create Mutex for shared I2C bus synchronization */
+    gs_riic3_mutex = R_OS_MutexCreate();
+
+    printf("[RIIC3] Bus initialized at 400kHz, mutex created.\r\n");
+    return gs_riic3_handle;
+}
+
+static void riic3_bus_lock(void)
+{
+    if (gs_riic3_mutex)
+    {
+        R_OS_MutexAcquire(gs_riic3_mutex);
+    }
+}
+
+static void riic3_bus_unlock(void)
+{
+    if (gs_riic3_mutex)
+    {
+        R_OS_MutexRelease(gs_riic3_mutex);
+    }
+}
+
+/* Shared sensor reading between AHT10 and SSD1306 */
+static aht10_data_t gs_latest_aht10_data = {0.0f, 0.0f};
+static bool_t gs_aht10_ready = false;
+
+void aht10_demo_task(void *p_param)
+{
+    int_t riic_handle = (int_t)(intptr_t)p_param;
+    aht10_data_t sensor_data;
+
+    if (riic_handle < 0)
+    {
+        riic_handle = gs_riic3_handle;
+    }
+
+    /* 1. Initialize sensor with mutex protection */
+    riic3_bus_lock();
+    int init_res = aht10_init(riic_handle);
+    if (init_res < 0)
     {
         printf("[WARN] AHT10 init failed, trying soft reset...\r\n");
         aht10_soft_reset(riic_handle);
-        if (aht10_init(riic_handle) < 0)
-        {
-            printf("[ERROR] Failed to connect to AHT10, please check wiring and pull-up resistors!\r\n");
-            close(riic_handle);
-            return;
-        }
+        init_res = aht10_init(riic_handle);
+    }
+    riic3_bus_unlock();
+
+    if (init_res < 0)
+    {
+        printf("[ERROR] Failed to connect to AHT10, please check wiring and pull-up resistors!\r\n");
+        while (1) { R_OS_TaskSleep(1000); }
     }
 
     printf("AHT10 sensor initialized successfully, starting sampling...\r\n");
 
-    /* 4. Sampling loop (every 2 seconds) */
+    /* 2. Periodic sampling loop */
     while (1)
     {
+        riic3_bus_lock();
         int ret = aht10_read_data(riic_handle, &sensor_data);
+        riic3_bus_unlock();
+
         if (ret == 0)
         {
+            gs_latest_aht10_data = sensor_data;
+            gs_aht10_ready = true;
+
             printf("[AHT10] Temp: %.2f °C | Hum: %.2f %%RH\r\n",
                    sensor_data.temperature,
                    sensor_data.humidity);
@@ -202,8 +260,66 @@ void aht10_demo_task(void *p_param)
 
         R_OS_TaskSleep(2000);
     }
+}
 
-    close(riic_handle);
+void ssd1306_demo_task(void *p_param)
+{
+    int_t riic_handle = (int_t)(intptr_t)p_param;
+    char text_buf[24];
+
+    if (riic_handle < 0)
+    {
+        riic_handle = gs_riic3_handle;
+    }
+
+    /* 1. Initialize SSD1306 with mutex protection (configured for 128x32 OLED) */
+    riic3_bus_lock();
+    int init_res = ssd1306_init(riic_handle);
+    riic3_bus_unlock();
+
+    if (init_res < 0)
+    {
+        printf("[ERROR] SSD1306 init failed! Check OLED VCC/GND/SCL/SDA wiring.\r\n");
+        while (1) { R_OS_TaskSleep(1000); }
+    }
+
+    printf("SSD1306 initialized successfully (128x32, 16x16 proportional font).\r\n");
+
+    /* 2. Welcome Splash Screen (2 seconds) using 16x16 proportional font */
+    riic3_bus_lock();
+    ssd1306_clear(riic_handle);
+    ssd1306_draw_string16(riic_handle, 8, 0, "RZ/A2M OLED");
+    ssd1306_draw_string16(riic_handle, 8, 1, "AHT10 SENSOR");
+    riic3_bus_unlock();
+    R_OS_TaskSleep(2000);
+
+    riic3_bus_lock();
+    ssd1306_clear(riic_handle);
+    riic3_bus_unlock();
+
+    /* 3. Real-time Dashboard Display loop */
+    while (1)
+    {
+        riic3_bus_lock();
+        if (gs_aht10_ready)
+        {
+            /* Line 0: Temperature (16x16 font spanning Page 0 and Page 1) */
+            snprintf(text_buf, sizeof(text_buf), "Temp: %.1f C", gs_latest_aht10_data.temperature);
+            ssd1306_draw_string16(riic_handle, 4, 0, text_buf);
+
+            /* Line 1: Humidity (16x16 font spanning Page 2 and Page 3) */
+            snprintf(text_buf, sizeof(text_buf), "Humi: %.1f %%", gs_latest_aht10_data.humidity);
+            ssd1306_draw_string16(riic_handle, 4, 1, text_buf);
+        }
+        else
+        {
+            ssd1306_draw_string16(riic_handle, 4, 0, "Waiting...");
+            ssd1306_draw_string16(riic_handle, 4, 1, "Init Sensor");
+        }
+        riic3_bus_unlock();
+
+        R_OS_TaskSleep(1000);
+    }
 }
 
 /******************************************************************************
@@ -281,13 +397,21 @@ int_t os_main_task_t(void)
         }
     }
 
+    /* Initialize shared RIIC3 Bus once for both AHT10 and SSD1306 */
+    riic3_bus_init();
+
     /* Create a task to run the console */
-    R_OS_TaskCreate("Console", os_console_task_t, NULL,
+    R_OS_TaskCreate("Console", (os_task_code_t)os_console_task_t, NULL,
                                 R_OS_ABSTRACTION_DEFAULT_STACK_SIZE,
                                 TASK_CONSOLE_TASK_PRI);
 
     /* Create AHT10 Demo Task */
-    R_OS_TaskCreate("AHT10", aht10_demo_task, NULL,
+    R_OS_TaskCreate("AHT10", aht10_demo_task, (void *)(intptr_t)gs_riic3_handle,
+                                R_OS_ABSTRACTION_DEFAULT_STACK_SIZE,
+                                TASK_CONSOLE_TASK_PRI);
+
+    /* Create SSD1306 Demo Task */
+    R_OS_TaskCreate("SSD1306", ssd1306_demo_task, (void *)(intptr_t)gs_riic3_handle,
                                 R_OS_ABSTRACTION_DEFAULT_STACK_SIZE,
                                 TASK_CONSOLE_TASK_PRI);
 
